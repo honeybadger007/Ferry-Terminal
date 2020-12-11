@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ConsoleApp
 {
-    class DockEmployee
+    class DockEmployee : IEmployee
     {
         public int Id { get; set; }
         public double CalcCommission(double price)
