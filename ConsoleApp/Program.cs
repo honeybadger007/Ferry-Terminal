@@ -19,27 +19,43 @@ namespace ConsoleApp
             terminalId = dockId = ferryId = employeeId = parcelId = documentId = invoiceId = 0;
             #endregion
 
+            var terminals = new List<FerryTerminal>();
+            var docks = new List<Dock>();
+            var documents = new List<TerminalDocument>();
+            var ferrys = new List<Ferry>();
+            var parcels = new List<Parcel>();
+            var invoices = new List<Invoice>();
+            var employees = new List<IEmployee>();
+            var vehicles = new List<IVehicle>();
+
             #region CREATE TERMINAL INFRASTRUCTURE AND PERSONELL
             // Create ferry terminal
             var ferryTerminal = new FerryTerminal(terminalId++);
+            terminals.Add(ferryTerminal);
 
             // Create Dock
             var smallDock = new Dock(dockId++);
             var largeDock = new Dock(dockId++);
+            docks.Add(smallDock);
+            docks.Add(largeDock);
 
             // Get Dock reference inside ferry terminal
             ferryTerminal.DocksId.Add(smallDock.Id);
             ferryTerminal.DocksId.Add(largeDock.Id);
 
             // Create first two ferrys
-            var smallFerry = new Ferry(ferryId++, FerrySize.Small);
-            var largeFerry = new Ferry(ferryId++, FerrySize.Large);
+            Ferry smallFerry = new Ferry(ferryId++, FerrySize.Small);
+            Ferry largeFerry = new Ferry(ferryId++, FerrySize.Large);
+            ferrys.Add(smallFerry);
+            ferrys.Add(largeFerry);
+
             // Assign them to the docks
             smallDock.FerrysIds.Add(smallFerry.Id);
             largeDock.FerrysIds.Add(largeFerry.Id);
 
             // Create dock employee
             var dockEmloyee = new DockEmployee { Id = employeeId++ };
+            employees.Add(dockEmloyee);
             #endregion
 
             #region Create vehicle factory
@@ -52,12 +68,13 @@ namespace ConsoleApp
             Console.WriteLine("********************************** Ferry Terimnal simulation Started **********************************");
             Console.WriteLine("*******************************************************************************************************\n\n");
             Console.ForegroundColor = ConsoleColor.Gray;
-            for (int i = 0; i < 100000; i++)
+            for (int i = 0; i < 1000; i++)
             {
                 // Create Vehicle
                 var rndVehicleType = rnd.Next(1, 5);
                 var vehType = (VehicleType)rndVehicleType;
                 var currentVehicle = vehicleFactory.CreateVehicle(vehType);
+                vehicles.Add(currentVehicle);
                 currentVehicle.FuelLevel = rnd.Next(0, 101);
 
                 #region Chose parcel size
@@ -82,11 +99,14 @@ namespace ConsoleApp
                 }
                  #endregion
 
-                 // Create Parcel
-                 var currentParcel = new Parcel { Id = parcelId++, Content = currentVehicle.Id, Location = Location.UnSet, Size = parcelSize  };
+                // Create Parcel
+                var currentParcel = new Parcel { Id = parcelId++, Content = currentVehicle.Id, Location = Location.UnSet, Size = parcelSize  };
+                parcels.Add(currentParcel);
 
                 // Create terminal document
                 var currentDoc = new TerminalDocument { DocumentId = documentId++ };
+                documents.Add(currentDoc);
+
                 ferryTerminal.DocumentsIds.Add(currentDoc.DocumentId);
                 currentDoc.ParcelsIds.Add(currentParcel.Id);
                 currentParcel.Location = Location.Arrival;
@@ -94,6 +114,7 @@ namespace ConsoleApp
                 //// logistic
                 // Charge transport fee
                 var transportFee = 0;
+
                 switch (currentVehicle.Type)
                 {
                     case VehicleType.Car:
@@ -111,8 +132,10 @@ namespace ConsoleApp
                     default:
                         break;
                 }
-                var invoice = new Invoice { Id = invoiceId++
-                    , EmployeId = dockEmloyee.Id, ServiceType = ServiceType.TransportFee, Amount = transportFee };
+
+                var invoice = new Invoice { Id = invoiceId++, EmployeId = dockEmloyee.Id, ServiceType = ServiceType.TransportFee, Amount = transportFee };
+                invoices.Add(invoice);
+
                 _grossIncome += invoice.Amount;
                 Console.WriteLine($"Transport fee of {transportFee} for a vehicle of a type {currentVehicle.Type.ToString()} has been charged.");
                 currentDoc.InvoicesIds.Add(invoice.Id);
@@ -138,16 +161,19 @@ namespace ConsoleApp
                     Console.WriteLine($"Cargo doors are closed");
                 }
 
-                // Create ferry when it is full
+                // Create ferry when it is full 
                 if(smallFerry.CurrentCargo.Count == smallFerry.FerryCapapcity )
                 {
                     smallFerry = new Ferry(ferryId++, FerrySize.Small);
+                    ferrys.Add(smallFerry);
                     smallDock.FerrysIds.Add(smallFerry.Id);
                 }
 
                 if (largeFerry.CurrentCargo.Count == largeFerry.FerryCapapcity )
                 {
                     largeFerry = new Ferry(ferryId++, FerrySize.Large);
+                    ferrys.Add(largeFerry);
+
                     largeDock.FerrysIds.Add(largeFerry.Id);
                 }
 
